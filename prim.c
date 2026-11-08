@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <limits.h>
+#include "priority_queue.h"
 
 void print_edges(int edges[][3], int n_edges)
 {
@@ -9,14 +10,49 @@ void print_edges(int edges[][3], int n_edges)
   }
 }
 
+void swap_int(int *x, int *y)
+{
+  int t = *x;
+  *x = *y;
+  *y = t;
+}
+
+typedef struct {
+  int key;
+  int parent;
+} Node;
+
+int cmp(void *a, void *b)
+{
+  const Node *x = a;
+  const Node *y = b;
+
+  if (x->key < y->key) return -1;
+  if (x->key > y->key) return 1;
+  return 0;
+}
+
 void prim(int edges[][3], int n_vertices, int n_edges, int root)
 {
   int key[n_vertices];
   int parent[n_vertices];
+  int pq[n_vertices];
+
   for (int i = 0; i < n_vertices; i++) {
     key[i] = INT_MAX;
     parent[i] = -1;
   }
+  parent[root] = 0;
+  key[root] = 0;
+
+  Node PQ[n_vertices];
+  for (int i = 0; i < n_vertices; i++) {
+    PQ[i].key = INT_MAX;
+    PQ[i].parent = -1;
+  }
+  PQ[root].key = 0;
+  PQ[root].parent = 0;
+
 }
 
 int main()
@@ -48,6 +84,11 @@ int main()
   print_edges(edges, n_edges);
 
   prim(edges, n_vertices, n_edges, 1);
+
+  // int x = 100, y = 200;
+  // printf("%d %d\n", x, y);
+  // swap_int(&x, &y);
+  // printf("%d %d\n", x, y);
 
   return 0;
 }
