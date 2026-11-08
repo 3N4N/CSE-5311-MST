@@ -74,7 +74,7 @@ int main()
   fclose(fp);
   print_edges(edges, n_edges);
 
-  prim(edges, n_vertices, n_edges, 1);
+  prim(edges, n_vertices, n_edges, root);
 
   // int x = 100, y = 200;
   // printf("%d %d\n", x, y);
