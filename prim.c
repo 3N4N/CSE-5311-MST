@@ -17,41 +17,32 @@ void swap_int(int *x, int *y)
   *y = t;
 }
 
-typedef struct {
-  int key;
-  int parent;
-} Node;
-
-int cmp(void *a, void *b)
+int is_smaller(void *a, void *b)
 {
   const Node *x = a;
   const Node *y = b;
 
-  if (x->key < y->key) return -1;
-  if (x->key > y->key) return 1;
+  if (x->key < y->key) return 1;
   return 0;
 }
 
 void prim(int edges[][3], int n_vertices, int n_edges, int root)
 {
-  int key[n_vertices];
-  int parent[n_vertices];
-  int pq[n_vertices];
-
-  for (int i = 0; i < n_vertices; i++) {
-    key[i] = INT_MAX;
-    parent[i] = -1;
-  }
-  parent[root] = 0;
-  key[root] = 0;
+  root -= 1;
 
   Node PQ[n_vertices];
+  int PQ_size = n_vertices;
   for (int i = 0; i < n_vertices; i++) {
+    PQ[i].id = i+1;
     PQ[i].key = INT_MAX;
     PQ[i].parent = -1;
   }
   PQ[root].key = 0;
   PQ[root].parent = 0;
+
+  while(PQ_size > 0) {
+    Node *u = PQ_pop((void **)&PQ, PQ_size--, &is_smaller);
+  }
 
 }
 

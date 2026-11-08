@@ -1,4 +1,5 @@
 #include "priority_queue.h"
+#include <stdio.h>
 
 void swap_items(void **x, void **y)
 {
@@ -12,18 +13,28 @@ void PQ_heapify(void **a, int n, int i, int (*cmp)(void *, void *))
   int l = 2*i+1;
   int r = 2*i+2;
   int smallest = i;
-  if (l<n && cmp(a[l], a[i])) smallest = l;
-  if (r<n && cmp(a[r], a[i])) smallest = r;
+  // puts("PQ_heapify: 1");
+  if (l<n && cmp(&a[l], &a[i])) smallest = l;
+  // puts("PQ_heapify: 2");
+  if (r<n && cmp(&a[r], &a[i])) smallest = r;
+  // puts("PQ_heapify: 3");
   if (smallest != i) {
     swap_items(&a[i], &a[smallest]);
     PQ_heapify(a, n, smallest, cmp);
   }
 }
 
-// int PQ_pop(void **a, int n)
-// {
-//   int min = a[0]->key;
-//   a[0] = a[n-1];
-//   PQ_min_heapify(a, n-1, 0);
-//   return min;
-// }
+void* PQ_pop(void **a, int n, int (*cmp)(void *, void *))
+{
+  // puts("PQ_pop: 1");
+  // printf("%p\n", ((Node*)a));
+  // printf("%d: %d\n", ((Node *)a)[0].key, ((Node *)a)[0].parent);
+  void* result = a;
+  // printf("1 %d: %d\n", ((Node *) result)->key, ((Node *) result)->parent);
+  swap_items(&a[0], &a[n-1]);
+  // printf("%d: %d\n", ((Node *)a)[0].key, ((Node *)a)[0].parent);
+  // puts("PQ_pop: 2");
+  PQ_heapify(a, n-1, 0, cmp);
+  // puts("PQ_pop: 3");
+  return result;
+}

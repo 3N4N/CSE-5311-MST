@@ -10,10 +10,10 @@ prim: prim.o priority_queue.o
 	$(CC) -o $@ $^
 
 %.o: %.c
-	$(CC) -o $@ $(CFLAGS) -c $<
+	$(CC) -g -o $@ $(CFLAGS) -c $<
 
 %.o: %.c %.h
-	$(CC) -o $@ $(CFLAGS) -c $<
+	$(CC) -g -o $@ $(CFLAGS) -c $<
 
 run: prim
 	./prim
