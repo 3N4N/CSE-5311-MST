@@ -24,6 +24,13 @@ void PQ_heapify(void **a, int n, int i, int (*cmp)(void *, void *))
   }
 }
 
+void PQ_build(void **a, int n, int (*cmp)(void *, void *))
+{
+  for (int i = n/2 - 1; i >= 0; i--) {
+    PQ_heapify(a, n, i, cmp);
+  }
+}
+
 void* PQ_pop(void **a, int n, int (*cmp)(void *, void *))
 {
   // puts("PQ_pop: 1");

@@ -43,6 +43,7 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
   }
   nodes[root].key = 0;
   nodes[root].parent = 0;
+  PQ_build((void **)PQ, PQ_size, &is_smaller);
 
   while(PQ_size > 0) {
     Node *u = PQ_pop((void **)PQ, PQ_size--, &is_smaller);
