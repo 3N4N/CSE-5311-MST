@@ -30,20 +30,38 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
 {
   root -= 1;
 
-  Node PQ[n_vertices];
+  Node nodes[n_vertices];
+  Node *PQ[n_vertices];
+  int in_pq[n_vertices];
   int PQ_size = n_vertices;
   for (int i = 0; i < n_vertices; i++) {
-    PQ[i].id = i+1;
-    PQ[i].key = INT_MAX;
-    PQ[i].parent = -1;
+    nodes[i].id = i+1;
+    nodes[i].key = INT_MAX;
+    nodes[i].parent = -1;
+    PQ[i] = &nodes[i];
+    in_pq[i] = 1;
   }
-  PQ[root].key = 0;
-  PQ[root].parent = 0;
+  nodes[root].key = 0;
+  nodes[root].parent = 0;
 
   while(PQ_size > 0) {
-    Node *u = PQ_pop((void **)&PQ, PQ_size--, &is_smaller);
-  }
+    Node *u = PQ_pop((void **)PQ, PQ_size--, &is_smaller);
+    in_pq[u->id - 1] = 0;
+    if (u->key == INT_MAX) continue;  // unreachable from root
 
+    for (int i = 0; i < n_edges; i++) {
+      int v;
+      if (edges[i][0] == u->id)       v = edges[i][1];
+      else if (edges[i][1] == u->id)  v = edges[i][0];
+      else continue;
+
+      int w = edges[i][2];
+      if (in_pq[v-1] && w < nodes[v-1].key) {
+        nodes[v-1].key = w;
+        nodes[v-1].parent = u->id;
+      }
+    }
+  }
 }
 
 int main()
