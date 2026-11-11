@@ -26,6 +26,22 @@ int is_smaller(void *a, void *b)
   return 0;
 }
 
+void print_mst(Node nodes[], int n_vertices, int root) {
+  int total = 0;
+  puts("\nMST edges:");
+  puts("S\tD\tW");
+  for (int i = 0; i < n_vertices; i++) {
+    if (i == root) continue;
+    if (nodes[i].parent == -1) {
+      printf("vertex %d is unreachable\n", i+1);
+      continue;
+    }
+    printf("%d\t%d\t%d\n", nodes[i].parent, nodes[i].id, nodes[i].key);
+    total += nodes[i].key;
+  }
+  printf("Total weight: %d\n", total);
+}
+
 void prim(int edges[][3], int n_vertices, int n_edges, int root)
 {
   root -= 1;
@@ -68,6 +84,8 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
       }
     }
   }
+
+  print_mst(nodes, n_vertices, root);
 }
 
 int main()
