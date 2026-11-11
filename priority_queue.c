@@ -31,6 +31,14 @@ void PQ_build(void **a, int n, int (*cmp)(void *, void *))
   }
 }
 
+void PQ_decrease_key(void **a, int i, int (*cmp)(void *, void *))
+{
+  while (i > 0 && cmp(a[i], a[(i-1)/2])) {
+    swap_items(&a[i], &a[(i-1)/2]);
+    i = (i-1)/2;
+  }
+}
+
 void* PQ_pop(void **a, int n, int (*cmp)(void *, void *))
 {
   // puts("PQ_pop: 1");

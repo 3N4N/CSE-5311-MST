@@ -60,6 +60,11 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
       if (in_pq[v-1] && w < nodes[v-1].key) {
         nodes[v-1].key = w;
         nodes[v-1].parent = u->id;
+        for (int j = 0; j < PQ_size; j++) {
+          if (PQ[j] == &nodes[v-1]) {
+            PQ_decrease_key((void **)PQ, j, *is_smaller);
+          }
+        }
       }
     }
   }
