@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <limits.h>
+#include "node.h"
 #include "priority_queue.h"
 
 void print_edges(int edges[][3], int n_edges)
