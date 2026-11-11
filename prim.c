@@ -11,11 +11,14 @@ void print_edges(int edges[][3], int n_edges)
   }
 }
 
-void swap_int(int *x, int *y)
+void swap_nodes(void **a, void **b)
 {
-  int t = *x;
-  *x = *y;
-  *y = t;
+  void *t = *a; *a = *b; *b = t;
+  Node *x = *a;
+  Node *y = *b;
+  int t_pos = x->pos;
+  x->pos = y->pos;
+  y->pos = t_pos;
 }
 
 int is_smaller(void *a, void *b)
@@ -43,7 +46,7 @@ void print_mst(Node nodes[], int n_vertices, int root) {
   printf("Total weight: %d\n", total);
 }
 
-void prim(int edges[][3], int n_vertices, int n_edges, int root)
+void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
 {
   root -= 1;
 
@@ -55,15 +58,16 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
     nodes[i].id = i+1;
     nodes[i].key = INT_MAX;
     nodes[i].parent = -1;
+    nodes[i].pos = i;
     PQ[i] = &nodes[i];
     in_pq[i] = 1;
   }
   nodes[root].key = 0;
   nodes[root].parent = 0;
-  PQ_build((void **)PQ, PQ_size, &is_smaller);
+  PQ_build((void **)PQ, PQ_size, &is_smaller, &swap_nodes);
 
   while(PQ_size > 0) {
-    Node *u = PQ_pop((void **)PQ, PQ_size--, &is_smaller);
+    Node *u = PQ_pop((void **)PQ, PQ_size--, &is_smaller, &swap_nodes);
     in_pq[u->id - 1] = 0;
     if (u->key == INT_MAX) continue;  // unreachable from root
 
@@ -77,10 +81,20 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
       if (in_pq[v-1] && w < nodes[v-1].key) {
         nodes[v-1].key = w;
         nodes[v-1].parent = u->id;
+
+        if (use_pos) {
+        PQ_decrease_key((void **)PQ, nodes[v-1].pos, &is_smaller, &swap_nodes);
+        // puts("USING Node.pos field");
+        } else {
+
         for (int j = 0; j < PQ_size; j++) {
           if (PQ[j] == &nodes[v-1]) {
-            PQ_decrease_key((void **)PQ, j, *is_smaller);
+            // printf("j: %d, u,v: %d,%d, node.pos: %d\n", j, u->id,v, nodes[v-1].pos);
+            PQ_decrease_key((void **)PQ, j, &is_smaller, &swap_nodes);
+            break;
           }
+        }
+
         }
       }
     }
@@ -89,9 +103,12 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root)
   print_mst(nodes, n_vertices, root);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-  int n_vertices, n_edges, root;
+  int n_vertices, n_edges, root, use_pos, graph_unweighted;
+
+  use_pos = argc > 1 ? *argv[1] - '0' : 1;
+  printf("Use Pos? %d\n", use_pos);
 
   FILE *fp = fopen("input.txt", "r");
   if (fp == NULL) {
@@ -114,15 +131,11 @@ int main()
   for (int i = 0; i < n_edges; i++) {
     fscanf(fp, "%d %d %d", &edges[i][0], &edges[i][1], &edges[i][2]);
   }
+
   fclose(fp);
-  print_edges(edges, n_edges);
 
-  prim(edges, n_vertices, n_edges, root);
-
-  // int x = 100, y = 200;
-  // printf("%d %d\n", x, y);
-  // swap_int(&x, &y);
-  // printf("%d %d\n", x, y);
+  prim(edges, n_vertices, n_edges, root, use_pos);
+  // print_edges(edges, n_edges);
 
   return 0;
 }
