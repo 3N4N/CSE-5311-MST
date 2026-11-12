@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 #include "node.h"
 #include "priority_queue.h"
+
+# define FILE_PATH_MAXLEN 1024
 
 void print_edges(int edges[][3], int n_edges)
 {
@@ -108,14 +112,25 @@ int main(int argc, char* argv[])
   int n_vertices, n_edges, root, use_pos, graph_unweighted;
 
   use_pos = argc > 1 ? *argv[1] - '0' : 1;
+  graph_unweighted = argc > 2 ? *argv[2] - '0' : 0;
   printf("Use Pos? %d\n", use_pos);
+  printf("Unweighted? %d\n", graph_unweighted);
 
-  FILE *fp = fopen("input.txt", "r");
+  char filepath[FILE_PATH_MAXLEN];
+  if (argc > 3) {
+    strncpy(filepath, argv[3], FILE_PATH_MAXLEN);
+  } else {
+    strncpy(filepath, "graph.txt", sizeof(filepath) - 1);
+  }
+  printf("Input graph: %s\n", filepath);
+  // return 0;
+
+  FILE *fp = fopen(filepath, "r");
   if (fp == NULL) {
     perror("Couldn't open file");
     return 1;
   }
-  fscanf(fp, "%d %d %d", &n_vertices, &n_edges, &root);
+  fscanf(fp, "%d,%d,%d", &n_vertices, &n_edges, &root);
 
   if (n_vertices < 0 || n_edges < 0) {
     perror("Unsupported #vertices or #edges");
@@ -127,9 +142,20 @@ int main(int argc, char* argv[])
   }
 
   int edges[n_edges][3];
+  // return 0;
 
-  for (int i = 0; i < n_edges; i++) {
-    fscanf(fp, "%d %d %d", &edges[i][0], &edges[i][1], &edges[i][2]);
+  if (graph_unweighted) {
+    srand(7796);
+    for (int i = 0; i < n_edges; i++) {
+      fscanf(fp, "%d,%d", &edges[i][0], &edges[i][1]);
+      edges[i][2] = rand() % 100;
+      // printf("%d,%d,%d\n", edges[i][0], edges[i][1], edges[i][2]);
+    }
+  } else {
+    for (int i = 0; i < n_edges; i++) {
+      fscanf(fp, "%d,%d,%d", &edges[i][0], &edges[i][1], &edges[i][2]);
+      // printf("%d,%d,%d\n", edges[i][0], edges[i][1], edges[i][2]);
+    }
   }
 
   fclose(fp);
