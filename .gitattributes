@@ -1,1 +1,4 @@
+data/dimacs9/USA-road-d.NW.gr filter=lfs diff=lfs merge=lfs -text
 data/USA-t.graph filter=lfs diff=lfs merge=lfs -text
+data/USA-t.graph-undirected.csv filter=lfs diff=lfs merge=lfs -text
+data/NW-t.graph-undirected.csv filter=lfs diff=lfs merge=lfs -text
