@@ -34,32 +34,37 @@ int is_smaller(void *a, void *b)
   return 0;
 }
 
-void print_mst(Node nodes[], int n_vertices, int root) {
+void print_mst(Node nodes[], int n_vertices, int root, int print_edges) {
   int total = 0;
   puts("\nMST edges:");
   puts("S\tD\tW");
   for (int i = 0; i < n_vertices; i++) {
     if (i == root) continue;
     if (nodes[i].parent == -1) {
-      printf("vertex %d is unreachable\n", i+1);
+      if (print_edges)
+        printf("vertex %d is unreachable\n", nodes[i].id);
       continue;
     }
-    printf("%d\t%d\t%d\n", nodes[i].parent, nodes[i].id, nodes[i].key);
+    if (print_edges)
+      printf("%d\t%d\t%d\n", nodes[i].parent, nodes[i].id, nodes[i].key);
     total += nodes[i].key;
   }
   printf("Total weight: %d\n", total);
 }
 
+// Node ids run from 0 to n_vertices-1; the node with id x is nodes[x].
 void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
 {
-  root -= 1;
-
-  Node nodes[n_vertices];
-  Node *PQ[n_vertices];
-  int in_pq[n_vertices];
+  Node *nodes = malloc(n_vertices * sizeof *nodes);
+  Node **PQ = malloc(n_vertices * sizeof *PQ);
+  int *in_pq = malloc(n_vertices * sizeof *in_pq);
+  if (nodes == NULL || PQ == NULL || in_pq == NULL) {
+    perror("Couldn't allocate memory for prim");
+    exit(1);
+  }
   int PQ_size = n_vertices;
   for (int i = 0; i < n_vertices; i++) {
-    nodes[i].id = i+1;
+    nodes[i].id = i;
     nodes[i].key = INT_MAX;
     nodes[i].parent = -1;
     nodes[i].pos = i;
@@ -67,12 +72,11 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
     in_pq[i] = 1;
   }
   nodes[root].key = 0;
-  nodes[root].parent = 0;
   PQ_build((void **)PQ, PQ_size, &is_smaller, &swap_nodes);
 
   while(PQ_size > 0) {
     Node *u = PQ_pop((void **)PQ, PQ_size--, &is_smaller, &swap_nodes);
-    in_pq[u->id - 1] = 0;
+    in_pq[u->id] = 0;
     if (u->key == INT_MAX) continue;  // unreachable from root
 
     for (int i = 0; i < n_edges; i++) {
@@ -82,17 +86,17 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
       else continue;
 
       int w = edges[i][2];
-      if (in_pq[v-1] && w < nodes[v-1].key) {
-        nodes[v-1].key = w;
-        nodes[v-1].parent = u->id;
+      if (in_pq[v] && w < nodes[v].key) {
+        nodes[v].key = w;
+        nodes[v].parent = u->id;
 
         if (use_pos) {
-        PQ_decrease_key((void **)PQ, nodes[v-1].pos, &is_smaller, &swap_nodes);
+        PQ_decrease_key((void **)PQ, nodes[v].pos, &is_smaller, &swap_nodes);
         // puts("USING Node.pos field");
         } else {
 
         for (int j = 0; j < PQ_size; j++) {
-          if (PQ[j] == &nodes[v-1]) {
+          if (PQ[j] == &nodes[v]) {
             // printf("j: %d, u,v: %d,%d, node.pos: %d\n", j, u->id,v, nodes[v-1].pos);
             PQ_decrease_key((void **)PQ, j, &is_smaller, &swap_nodes);
             break;
@@ -104,7 +108,11 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
     }
   }
 
-  print_mst(nodes, n_vertices, root);
+  print_mst(nodes, n_vertices, root, 0);
+
+  free(nodes);
+  free(PQ);
+  free(in_pq);
 }
 
 int main(int argc, char* argv[])
@@ -131,19 +139,18 @@ int main(int argc, char* argv[])
     return 1;
   }
   fscanf(fp, "%d,%d", &n_vertices, &n_edges);
+  printf("%d,%d\n", n_vertices, n_edges);
 
   if (n_vertices < 0 || n_edges < 0) {
     perror("Unsupported #vertices or #edges");
     return 1;
   }
 
-  root = 1;
-  if (root < 1 || root > n_vertices) {
-    perror("root node out of bound");
+  int (*edges)[3] = malloc(n_edges * sizeof *edges);
+  if (edges == NULL) {
+    perror("Couldn't allocate memory for edges");
     return 1;
   }
-
-  int edges[n_edges][3];
   // return 0;
 
   if (graph_unweighted) {
@@ -162,8 +169,15 @@ int main(int argc, char* argv[])
 
   fclose(fp);
 
+  root = 0;
+  if (root < 0 || root >= n_vertices) {
+    fprintf(stderr, "root node out of bound\n");
+    return 1;
+  }
+
   prim(edges, n_vertices, n_edges, root, use_pos);
   // print_edges(edges, n_edges);
 
+  free(edges);
   return 0;
 }
