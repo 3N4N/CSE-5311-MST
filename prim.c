@@ -112,15 +112,15 @@ int main(int argc, char* argv[])
   int n_vertices, n_edges, root, use_pos, graph_unweighted;
 
   use_pos = argc > 1 ? *argv[1] - '0' : 1;
-  graph_unweighted = argc > 2 ? *argv[2] - '0' : 0;
+  graph_unweighted = 0; // argc > 2 ? *argv[2] - '0' : 0;
   printf("Use Pos? %d\n", use_pos);
   printf("Unweighted? %d\n", graph_unweighted);
 
   char filepath[FILE_PATH_MAXLEN];
-  if (argc > 3) {
-    strncpy(filepath, argv[3], FILE_PATH_MAXLEN);
+  if (argc > 2) {
+    strncpy(filepath, argv[2], FILE_PATH_MAXLEN);
   } else {
-    strncpy(filepath, "graph.txt", sizeof(filepath) - 1);
+    strncpy(filepath, "./data/graph.txt", sizeof(filepath) - 1);
   }
   printf("Input graph: %s\n", filepath);
   // return 0;
@@ -130,12 +130,14 @@ int main(int argc, char* argv[])
     perror("Couldn't open file");
     return 1;
   }
-  fscanf(fp, "%d,%d,%d", &n_vertices, &n_edges, &root);
+  fscanf(fp, "%d,%d", &n_vertices, &n_edges);
 
   if (n_vertices < 0 || n_edges < 0) {
     perror("Unsupported #vertices or #edges");
     return 1;
   }
+
+  root = 1;
   if (root < 1 || root > n_vertices) {
     perror("root node out of bound");
     return 1;
