@@ -35,7 +35,7 @@ int is_smaller(void *a, void *b)
 }
 
 void print_mst(Node nodes[], int n_vertices, int root, int print_edges) {
-  int total = 0;
+  long long total = 0;
   puts("\nMST edges:");
   puts("S\tD\tW");
   for (int i = 0; i < n_vertices; i++) {
@@ -49,11 +49,34 @@ void print_mst(Node nodes[], int n_vertices, int root, int print_edges) {
       printf("%d\t%d\t%d\n", nodes[i].parent, nodes[i].id, nodes[i].key);
     total += nodes[i].key;
   }
-  printf("Total weight: %d\n", total);
+  printf("Total weight: %lld\n", total);
+}
+
+// Edge (u, v, w) was found from the popped vertex u: if it is a cheaper way
+// to reach v, update v's key and parent and move v up in the heap.
+static void relax(Node *nodes, Node **PQ, int PQ_size, int *in_pq,
+    int u, int v, int w, int use_pos)
+{
+  if (in_pq[v] && w < nodes[v].key) {
+    nodes[v].key = w;
+    nodes[v].parent = u;
+
+    if (use_pos) {
+      PQ_decrease_key((void **)PQ, nodes[v].pos, &is_smaller, &swap_nodes);
+    } else {
+      for (int j = 0; j < PQ_size; j++) {
+        if (PQ[j] == &nodes[v]) {
+          PQ_decrease_key((void **)PQ, j, &is_smaller, &swap_nodes);
+          break;
+        }
+      }
+    }
+  }
 }
 
 // Node ids run from 0 to n_vertices-1; the node with id x is nodes[x].
-void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
+// use_adj: 1 = find neighbors with an adjacency list, 0 = scan all edges.
+void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos, int use_adj)
 {
   Node *nodes = malloc(n_vertices * sizeof *nodes);
   Node **PQ = malloc(n_vertices * sizeof *PQ);
@@ -74,36 +97,52 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
   nodes[root].key = 0;
   PQ_build((void **)PQ, PQ_size, &is_smaller, &swap_nodes);
 
+  int *adj_start = NULL, *adj_to = NULL, *adj_w = NULL;
+  if (use_adj) {
+    adj_start = calloc(n_vertices + 1, sizeof *adj_start);
+    adj_to = malloc(2 * (size_t)n_edges * sizeof *adj_to);
+    adj_w = malloc(2 * (size_t)n_edges * sizeof *adj_w);
+    if (adj_start == NULL || adj_to == NULL || adj_w == NULL) {
+      perror("Couldn't allocate memory for adjacency list");
+      exit(1);
+    }
+    for (int i = 0; i < n_edges; i++) {
+      adj_start[edges[i][0] + 1]++;
+      adj_start[edges[i][1] + 1]++;
+    }
+    for (int u = 0; u < n_vertices; u++) {
+      adj_start[u+1] += adj_start[u];
+    }
+    for (int i = 0; i < n_edges; i++) {
+      int a = edges[i][0], b = edges[i][1], w = edges[i][2];
+      int k = adj_start[a]++;
+      adj_to[k] = b; adj_w[k] = w;
+      k = adj_start[b]++;
+      adj_to[k] = a; adj_w[k] = w;
+    }
+    // undo the shift
+    for (int u = n_vertices; u > 0; u--) {
+      adj_start[u] = adj_start[u-1];
+    }
+    adj_start[0] = 0;
+  }
+
   while(PQ_size > 0) {
     Node *u = PQ_pop((void **)PQ, PQ_size--, &is_smaller, &swap_nodes);
     in_pq[u->id] = 0;
     if (u->key == INT_MAX) continue;  // unreachable from root
 
-    for (int i = 0; i < n_edges; i++) {
-      int v;
-      if (edges[i][0] == u->id)       v = edges[i][1];
-      else if (edges[i][1] == u->id)  v = edges[i][0];
-      else continue;
-
-      int w = edges[i][2];
-      if (in_pq[v] && w < nodes[v].key) {
-        nodes[v].key = w;
-        nodes[v].parent = u->id;
-
-        if (use_pos) {
-        PQ_decrease_key((void **)PQ, nodes[v].pos, &is_smaller, &swap_nodes);
-        // puts("USING Node.pos field");
-        } else {
-
-        for (int j = 0; j < PQ_size; j++) {
-          if (PQ[j] == &nodes[v]) {
-            // printf("j: %d, u,v: %d,%d, node.pos: %d\n", j, u->id,v, nodes[v-1].pos);
-            PQ_decrease_key((void **)PQ, j, &is_smaller, &swap_nodes);
-            break;
-          }
-        }
-
-        }
+    if (use_adj) {
+      for (int k = adj_start[u->id]; k < adj_start[u->id + 1]; k++) {
+        relax(nodes, PQ, PQ_size, in_pq, u->id, adj_to[k], adj_w[k], use_pos);
+      }
+    } else {
+      for (int i = 0; i < n_edges; i++) {
+        int v;
+        if (edges[i][0] == u->id)       v = edges[i][1];
+        else if (edges[i][1] == u->id)  v = edges[i][0];
+        else continue;
+        relax(nodes, PQ, PQ_size, in_pq, u->id, v, edges[i][2], use_pos);
       }
     }
   }
@@ -113,15 +152,20 @@ void prim(int edges[][3], int n_vertices, int n_edges, int root, int use_pos)
   free(nodes);
   free(PQ);
   free(in_pq);
+  free(adj_start);
+  free(adj_to);
+  free(adj_w);
 }
 
 int main(int argc, char* argv[])
 {
-  int n_vertices, n_edges, root, use_pos, graph_unweighted;
+  int n_vertices, n_edges, root, use_pos, use_adj, graph_unweighted;
 
   use_pos = argc > 1 ? *argv[1] - '0' : 1;
   graph_unweighted = 0; // argc > 2 ? *argv[2] - '0' : 0;
+  use_adj = argc > 3 ? *argv[3] - '0' : 1;
   printf("Use Pos? %d\n", use_pos);
+  printf("Use adjacency list? %d\n", use_adj);
   printf("Unweighted? %d\n", graph_unweighted);
 
   char filepath[FILE_PATH_MAXLEN];
@@ -175,7 +219,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  prim(edges, n_vertices, n_edges, root, use_pos);
+  prim(edges, n_vertices, n_edges, root, use_pos, use_adj);
   // print_edges(edges, n_edges);
 
   free(edges);
