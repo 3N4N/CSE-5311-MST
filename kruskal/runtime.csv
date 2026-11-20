@@ -1,0 +1,16 @@
+dataset,average_algorithm_time_seconds
+USA-road-d.DE.gr-undirected.csv,0.001873036
+USA-road-d.ME.gr-undirected.csv,0.006751502
+USA-road-d.NW.gr-undirected.csv,0.046095176
+USA-road-d.VT.gr-undirected.csv,0.003319967
+USA-t.graph-undirected.csv,2.469951602
+random_D16_V1000000.csv,0.321825330
+random_D16_V500000.csv,0.162912768
+random_D2_V1000000.csv,0.063315680
+random_D2_V500000.csv,0.031591374
+random_D32_V1000000.csv,0.582774915
+random_D32_V500000.csv,0.293773856
+random_D4_V1000000.csv,0.110016589
+random_D4_V500000.csv,0.053272026
+random_D8_V1000000.csv,0.189195972
+random_D8_V500000.csv,0.096263331

@@ -13,10 +13,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--baseline", type=Path,
+                        help="expected graph/results CSV (defaults to benchmark.csv)")
     args = parser.parse_args()
     binary = args.binary.resolve()
 
-    with (folder / "benchmark.csv").open(newline="") as source:
+    baseline_path = args.baseline.resolve() if args.baseline else folder / "benchmark.csv"
+    with baseline_path.open(newline="") as source:
         baseline = list(csv.DictReader(source))
 
     fields = list(baseline[0])
@@ -32,8 +35,12 @@ def main():
         raw.writeheader()
         for expected in baseline:
             name = expected["dataset"]
-            dataset = folder / name if name == "USA-t.graph-undirected.csv" \
-                else folder.parent / "data" / "dimacs9" / name
+            if name.startswith("random_D"):
+                dataset = folder.parent / "data" / "synthetic2" / name
+            elif name == "USA-t.graph-undirected.csv":
+                dataset = folder / name
+            else:
+                dataset = folder.parent / "data" / "dimacs9" / name
             samples = []
             for run in range(1, 4):
                 result = subprocess.run([str(binary), str(dataset)],

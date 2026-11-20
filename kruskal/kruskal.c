@@ -25,6 +25,7 @@ _Static_assert(INT_MIN == INT32_MIN && INT_MAX == INT32_MAX,
                "Radix sort requires 32-bit int weights");
 
 /* Stable LSD radix sort: four byte passes, with signed weights in order. */
+#ifndef VANILLA_SORT
 static int radix_sort(Edge *edges, size_t count)
 {
     if (count < 2) return 0;
@@ -60,6 +61,26 @@ static int radix_sort(Edge *edges, size_t count)
     /* Four swaps leave the sorted result in the original edges array. */
     free(buffer);
     return 0;
+}
+#endif
+
+#ifdef VANILLA_SORT
+static int compare_edges(const void *left, const void *right)
+{
+    int a = ((const Edge *)left)->weight;
+    int b = ((const Edge *)right)->weight;
+    return (a > b) - (a < b);
+}
+#endif
+
+static int sort_edges(Edge *edges, size_t count)
+{
+#ifdef VANILLA_SORT
+    qsort(edges, count, sizeof *edges, compare_edges);
+    return 0;
+#else
+    return radix_sort(edges, count);
+#endif
 }
 static int find_root(DisjointSet *set, int vertex)
 {
@@ -161,8 +182,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (radix_sort(edges, (size_t)edge_count) != 0) {
-        perror("Could not allocate radix sort buffer");
+    if (sort_edges(edges, (size_t)edge_count) != 0) {
+        perror("Could not allocate sorting buffer");
         free(edges);
         free(parent);
         free(rank);
@@ -191,10 +212,12 @@ int main(int argc, char **argv)
         + (uint64_t)(size_t)vertex_count * sizeof *parent
         + (uint64_t)(size_t)vertex_count * sizeof *rank;
     /* Count peak explicit array storage, including radix sort's workspace. */
+#ifndef VANILLA_SORT
     if (edge_count >= 2) {
         allocated_bytes += (uint64_t)(size_t)edge_count * sizeof *edges
             + 256 * sizeof(size_t);
     }
+#endif
     printf("vertices=%d edges=%d selected_edges=%d components=%d ",
             vertex_count, edge_count, selected_edges, components);
     printf("total_weight=%" PRId64 " algorithm_seconds=%.9f allocated_bytes=%" PRIu64 "\n",
