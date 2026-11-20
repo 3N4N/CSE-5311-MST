@@ -1,0 +1,6 @@
+dataset,runs,vertices,edges,forest_edges,components,forest_weight,average_algorithm_time_seconds,allocated_space_bytes,allocated_space_mib
+USA-road-d.DE.gr-undirected.csv,3,49109,59760,49027,82,78515788,0.001857184,1681833,1.604
+USA-road-d.ME.gr-undirected.csv,3,194505,212345,193200,1305,539871910,0.007034515,6070853,5.790
+USA-road-d.NW.gr-undirected.csv,3,1111958,1291837,1108013,3945,3216339790,0.051517315,36565926,34.872
+USA-road-d.VT.gr-undirected.csv,3,97975,106242,97219,756,226714072,0.003784920,3041731,2.901
+USA-t.graph-undirected.csv,3,23947347,28854312,23947346,1,142251877532,2.664837403,812242271,774.615
